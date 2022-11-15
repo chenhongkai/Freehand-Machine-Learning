@@ -201,7 +201,7 @@ class SupprotVectorMachineClassification:
         indexSV_ = where(α_>0)[0]              # 数组索引：支持向量
         self.αSV_ = α_[indexSV_]               # 向量：支持向量对应的拉格朗日乘子α
         self.ySV_ = y_[indexSV_]               # 向量：支持向量对应的标签
-        self.supportVectors__ = X__[indexSV_]  # 所有支持向量
+        self.supportVectors__ = X__[indexSV_]  # 矩阵：所有支持向量
         self.α_ = α_                           # N维向量：N个拉格朗日乘子
         indexNonBound_ = where((0<α_) & (α_<C))[0]  # 数组索引：满足0<α<C的支持向量
         if len(indexNonBound_)>0:
