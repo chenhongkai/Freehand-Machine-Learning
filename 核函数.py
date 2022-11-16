@@ -29,7 +29,7 @@ class PolyKernel:
             r: float = 1.,
             γ: float = 1.,
             ):
-        assert type(d)==int and d>=1, '多项式核函数的指数d应为不小于1的正整数，K(x_, z_) = (γ * x_ @ z_ + r)**d'
+        assert type(d)==int and d>=1, '多项式核函数的指数d应为正整数，K(x_, z_) = (γ * x_ @ z_ + r)**d'
         assert γ>0, '多项式核函数的超参数γ应为正数，K(x_, z_) = (γ * x_ @ z_ + r)**d'
         self.d = d  # 指数d
         self.r = r  # 参数r
