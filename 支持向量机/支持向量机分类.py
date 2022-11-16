@@ -20,6 +20,12 @@ class SupprotVectorMachineClassification:
             γ: float = 1.,      # 超参数：高斯核函数、多项式核函数的参数
             r: float = 1.,      # 超参数：多项式核函数的参数
             ):
+        assert C>0, '惩罚参数C应大于0'
+        assert type(maxIterations)==int and maxIterations>0, '最大迭代次数maxIterations应为正整数'
+        assert tol>0, '收敛精度tol应大于0'
+        assert LR>0, '全局学习率LR应大于0'
+        assert type(d)==int and d>=1, '多项式核函数的指数d应为不小于1的正整数'
+        assert γ>0, '高斯核函数、多项式核函数的参数γ应大于0'
         self.C = C                    # 惩罚参数
         self.kernel = kernel.lower()  # 核函数：可选 线性核'linear'/高斯核'rbf'/多项式核'poly'
         self.solver = solver.lower()  # 求解算法：可选 序列最小优化'SMO'/梯度下降'Pegasos'
