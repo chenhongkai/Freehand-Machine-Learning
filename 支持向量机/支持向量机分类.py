@@ -1,6 +1,6 @@
 from random import choice, random
 
-from numpy import array, zeros, ndarray, where, isnan, inf, intersect1d, maximum
+from numpy import array, zeros, ones, ndarray, where, isnan, inf, intersect1d, maximum
 import matplotlib.pyplot as plt
 
 from 梯度下降 import GradientDescent
@@ -81,7 +81,7 @@ class SupprotVectorMachineClassification:
         """使用Pegasos（Primal estimated sub-gradient solver）算法，即梯度下降法，求解原始优化问题，最小化损失函数"""
         C = self.C        # 读取：惩罚参数
         N, M = X__.shape  # 训练样本数量N、输入特征向量的维数M
-        w_ = zeros(M)     # M维向量：初始化权重向量
+        w_ = ones(M)      # M维向量：初始化权重向量
         b = array([0.])   # 初始化偏置（由于偏置b需要载入梯度下降优化器，故先定义为1维ndarray，优化结束后再将偏置b提取为浮点数float）
         optimizer_for_w_ = GradientDescent(w_, method='Adam', LR=self.LR)  # 实例化w_的梯度下降优化器，代入全局学习率LR，选择Adam学习率调整策略
         optimizer_for_b  = GradientDescent(b, method='Adam', LR=self.LR)   # 实例化b的梯度下降优化器，代入全局学习率LR，选择Adam学习率调整策略
