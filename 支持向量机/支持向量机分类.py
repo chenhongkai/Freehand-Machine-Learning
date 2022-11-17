@@ -1,6 +1,6 @@
 from random import choice, random
 
-from numpy import array, zeros, ones, ndarray, where, isnan, inf, intersect1d, maximum
+from numpy import array, ones, zeros, ndarray, where, isnan, inf, intersect1d, maximum
 import matplotlib.pyplot as plt
 
 from 梯度下降 import GradientDescent
@@ -24,9 +24,9 @@ class SupprotVectorMachineClassification:
         assert type(maxIterations)==int and maxIterations>0, '最大迭代次数maxIterations应为正整数'
         assert tol>0, '收敛精度tol应大于0'
         assert LR>0, '全局学习率LR应大于0'
-        assert type(d)==int and d>=1, '多项式核函数的指数d应为正整数'
+        assert type(d)==int and d>=1, '多项式核函数的指数d应为不小于1的正整数'
         assert γ>0, '高斯核函数、多项式核函数的参数γ应大于0'
-        self.C = C                    # 惩罚参数
+        self.C = C                    # 超参数：惩罚参数
         self.kernel = kernel.lower()  # 核函数：可选 线性核'linear'/高斯核'rbf'/多项式核'poly'
         self.solver = solver.lower()  # 求解算法：可选 序列最小优化'SMO'/梯度下降'Pegasos'
         self.maxIterations = maxIterations  # 最大迭代次数
@@ -39,10 +39,10 @@ class SupprotVectorMachineClassification:
         self.w_ = None  # M维向量：权重向量
         self.b = None   # 偏置
         self.α_ = None  # N维向量：所有N个训练样本的拉格朗日乘子
-        self.supportVectors__ = None # 矩阵：所有支持向量
+        self.supportVectors__ = None  # 矩阵：所有支持向量
         self.αSV_ = None     # 向量：所有支持向量对应的拉格朗日乘子α
         self.ySV_ = None     # 向量：所有支持向量对应的标签
-        self.losses_ = None  # 列表：每次迭代的损失函数值（对于SMO求解算法，指对偶问题的最小化目标函数值）
+        self.losses_ = None  # 列表：历次迭代的损失函数值（对于SMO求解算法，指对偶问题的最小化目标函数值）
         """选择核函数"""
         if self.kernel=='linear':
             self.kernelFunction = LinearKernel()
@@ -131,12 +131,11 @@ class SupprotVectorMachineClassification:
             violateKKT_[(α_==0) & (yg_>=1)] = 0.               # N维向量：KKT条件 αi=0   ←→ yi*g(xi)≥1，李航《统计学习方法（第二版）》7.111式
             violateKKT_[(0<α_) & (α_<C) & (yg_==1)] = 0.       # N维向量：KKT条件 0<αi<C ←→ yi*g(xi)=1，李航《统计学习方法（第二版）》7.112式
             violateKKT_[(α_==C) & (yg_<=1)] = 0.               # N维向量：KKT条件 αi=C   ←→ yi*g(xi)≤1，李航《统计学习方法（第二版）》7.113式
-            indexViolateKKT_ = where(violateKKT_>self.tol)[0]  # 数组索引：找出违反KKT条件的α
-            if len(indexViolateKKT_)==0:
-                # 若不存在违反KKT条件的α，停止迭代
-                print(f'第{t}次迭代，最大违反KKT条件的程度达到收敛精度{self.tol}，停止迭代!')
+            if violateKKT_.max()<self.tol:
+                print(f'第{t}次SMO迭代，最大违反KKT条件的程度达到收敛精度{self.tol}，停止迭代!')
                 break
             """选择αi"""
+            indexViolateKKT_ = where(violateKKT_>0)[0]  # 数组索引：找出违反KKT条件的α
             indexNonBoundViolateKKT_ = intersect1d(indexViolateKKT_, indexNonBound_)  # 数组索引：找出违反KKT条件的非边界α
             if random()<0.85:
                 # 有较大的概率（85%）选取违KKT反条件程度最大的αi进行下一步优化，若有非边界α，首选非边界α
@@ -155,7 +154,7 @@ class SupprotVectorMachineClassification:
             while (X__[i]==X__[j]).all():
                 j = choice(range(N))  # 所选样本X__[i]、X__[j]完全相同，重新选择αj
             """优化αi、αj"""
-            print(f'第{t}次SMO迭代，所选i = {i}, j = {j}')
+            print(f'第{t}次SMO迭代，选择i = {i}, j = {j}')
             αiOld, αjOld = α_[i], α_[j]  # 记录αi、αj的旧值
             if y_[i]!=y_[j]:             # 确定αj的下限L、上限H
                 L, H = max(0, αjOld - αiOld), min(C, C + αjOld - αiOld)
@@ -215,7 +214,8 @@ class SupprotVectorMachineClassification:
             b_ = [(y_[k] - (self.αSV_*self.ySV_) @ K__[k, indexSV_]) for k in indexNonBound_]
             self.b = sum(b_)/len(b_)  # 取偏置b平均值
         else:
-            self.b = b  # 取最后一次迭代的偏置b
+            self.b = b
+            print('不存在满足0<α<C的α，取最后一次迭代得到的偏置b')
         """计算权重向量w_"""
         if self.kernel=='linear':
             # 若使用线性核函数，计算权重向量
