@@ -20,7 +20,7 @@ class LinearKernel:
 
 class PolyKernel:
     """
-    多项式核函数（Ploynomial kernel function）
+    多项式核函数（Polynomial kernel function）
     核函数值 K(x_, z_) = (γ * x_ @ z_ + r)**d
     其中，d、γ、r为超参数
     """
