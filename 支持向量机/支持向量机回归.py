@@ -22,7 +22,7 @@ class SupportVectorMachineRegression:
             r: float = 1.,      # 超参数：多项式核函数的参数
             ):
         assert C>0, '惩罚参数C应大于0'
-        assert ε>0, 'ε间隔带宽度应大于0'
+        assert ε>0, '间隔带半宽度ε应大于0'
         assert type(maxIterations)==int and maxIterations>0, '最大迭代次数maxIterations应为正整数'
         assert tol>0, '收敛精度tol应大于0'
         assert LR>0, '全局学习率LR大于0'
