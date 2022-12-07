@@ -7,7 +7,7 @@ from 梯度下降 import GradientDescent
 from 核函数 import LinearKernel, RBFKernel, PolyKernel
 
 
-class SupprotVectorMachineClassification:
+class SupportVectorMachineClassification:
     """支持向量机分类"""
     def __init__(self,
             C: float = 1.,               # 超参数：惩罚参数
@@ -307,7 +307,7 @@ if __name__=='__main__':
     Xtrain__, Xtest__, ytrain_, ytest_ = train_test_split(X__, y_)
 
     # 实例化支持向量机分类模型
-    model = SupprotVectorMachineClassification(
+    model = SupportVectorMachineClassification(
         C=1.,             # 超参数：惩罚参数
         kernel='linear',  # 核函数：可选 线性核'linear'/高斯核'RBF'/多项式核'poly'
         solver='SMO',     # 求解算法：可选 序列最小优化算法'SMO'/梯度下降法'Pegasos'
