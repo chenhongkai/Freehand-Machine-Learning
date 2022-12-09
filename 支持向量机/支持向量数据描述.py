@@ -53,7 +53,7 @@ class SupportVectorDataDescription:
         """训练：使用SMO（Sequential Minimal Optimization）算法求解对偶问题，最小化目标函数"""
         assert type(X__)==ndarray and X__.ndim==2, '输入训练样本矩阵X__应为2维ndarray'
         C = self.C             # 读取：惩罚参数
-        N, self.M = X__.shape  # 训练样本数量、输入量维数
+        N, self.M = X__.shape  # 训练样本数量、输入特征向量的维数
         assert C>1/N, f'惩罚参数C应大于1/N={1/N}'
         K__ = self.kernelFunction(X__, X__)  # N×N矩阵：核函数矩阵
         diagK_ = K__.diagonal()              # N维向量：核函数矩阵K__的对角线元素
