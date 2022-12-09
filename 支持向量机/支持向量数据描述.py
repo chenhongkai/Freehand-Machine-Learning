@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from 核函数 import LinearKernel, RBFKernel, PolyKernel
 
 class SupportVectorDataDescription:
+    """支持向量数据描述"""
     def __init__(self,
             C: float = 0.5,              # 超参数：惩罚参数
             kernel: str = 'linear',      # 核函数：可选 线性核'linear'/高斯核'RBF'/多项式核'poly'
