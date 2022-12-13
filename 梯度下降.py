@@ -1,4 +1,4 @@
-﻿from typing import Sequence
+from typing import Sequence
 from numpy import ndarray, maximum, zeros_like
 
 class GradientDescent:
@@ -6,10 +6,10 @@ class GradientDescent:
     def __init__(self,
              θ__: ndarray,          # ndarray类型的向量或矩阵：待优化的参数
              LR: float = 0.01,      # 全局学习率
-             method: str = 'Adam',  # 学习率调整策略，可选'SGD'/'AdaGrad'/'RMSprop'/'AdaDelta'/'Momentum'/'Adam'/'Nesterov'/'AdaMax'/'Nadam'
+             method: str = 'Adam',  # 学习率调整策略，可选'SGD'/'AdaGrad'/'RMSprop'/'AdaDelta'/'Momentum'/'Adam'/'Nesterov'/'AdaMax'/'Nadam'/'NadaMax'
              decayRates_: Sequence[float] = (.9, .999),  # 两个衰减率
              ):
-        assert type(θ__)==ndarray, '待优化的参数θ__的数据类型应为ndarray'
+        assert type(θ__)==ndarray and θ__.ndim>=1, '待优化的参数θ__的数据类型应为ndarray，其属性ndim应不小于1'
         assert LR>0, '全局学习率LR应为正数'
         assert len(decayRates_)==2, '衰减率参数decayRates_长度应为2'
         assert 0<=decayRates_[0]<1, '首项衰减率的取值范围为[0, 1)'
@@ -18,7 +18,8 @@ class GradientDescent:
         self.LR = LR                    # 全局学习率
         self.β1, self.β2 = decayRates_  # 衰减率参数（第一衰减率、第二衰减率）
         self.Δθ__ = zeros_like(θ__)     # 向量或矩阵：参数更新的增量
-        self.method = method.lower()    # 学习率调整策略，可选'SGD'/'AdaGrad'/'RMSprop'/'AdaDelta'/'Momentum'/'Adam'/'Nesterov'/'AdaMax'/'Nadam'
+        # 学习率调整策略，可选'SGD'/'AdaGrad'/'RMSprop'/'AdaDelta'/'Momentum'/'Adam'/'Nesterov'/'AdaMax'/'Nadam'/'NadaMax'
+        self.method = method.lower()
         self.m__ = zeros_like(θ__)      # 调整学习率所用到的累计参数
         self.n__ = zeros_like(θ__)      # 调整学习率所用到的累计参数
         self.t = 0                      # 更新的次数
@@ -29,6 +30,8 @@ class GradientDescent:
             self.optmizer = self.AdaMax
         elif self.method=='nadam':
             self.optmizer = self.Nadam
+        elif self.method=='nadamax':
+            self.optmizer = self.NadaMax
         elif self.method=='adagrad':
             self.optmizer = self.AdaGrad
         elif self.method=='rmsprop':
@@ -92,6 +95,19 @@ class GradientDescent:
         nHat__ = self.n__/(1 - β2**t)
         mHat__ = (1 - β1)*grad__/(1 - β1**t) + β1*mHat__
         self.Δθ__[:] = -self.LR*mHat__/(nHat__**0.5 + 1e-7)  # 参数更新的增量
+
+    def NadaMax(self, grad__):
+        """
+        NadaMax学习率调整策略
+        参考2016 Timothy Dozat的论文：Incorporating Nesterov Momentum into Adam
+        """
+        t = self.t    # 读取：更新的次数
+        β1 = self.β1  # 读取：衰减率
+        β2 = self.β2  # 读取：衰减率
+        self.m__[:] = β1*self.m__ + (1 - β1)*grad__      # 更新“有偏一阶矩估计”
+        self.n__[:] = maximum(β2*self.n__, abs(grad__))  # 更新“指数加权无穷大范数”
+        mHat__ = β1*self.m__ + (1 - β1)*grad__
+        self.Δθ__[:] = -self.LR/(1 - β1**t) * mHat__/(self.n__ + 1e-7)  # 参数更新的增量
 
     def AdaGrad(self, grad__):
         """
