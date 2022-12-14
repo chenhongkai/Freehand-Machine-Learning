@@ -1,6 +1,7 @@
 # 目的
 试图使用Python徒手编程实现各种机器学习算法。
-
+# 相关链接
+知乎专栏 https://www.zhihu.com/column/c_1572953471791316992
 # 更新记录
 2022.12.14 更新：\
 单类支持向量机（One-class support vector machine）\
