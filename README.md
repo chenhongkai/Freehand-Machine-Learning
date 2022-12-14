@@ -2,6 +2,9 @@
 试图使用Python徒手编程实现各种机器学习算法。
 
 # 更新记录
+2022.12.14 更新：\
+单类支持向量数据描述（One-class support vector machine）\
+\
 2022.12.9 更新：\
 支持向量数据描述（Support vector data description）\
 \
