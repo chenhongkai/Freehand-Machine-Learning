@@ -3,6 +3,9 @@
 # 相关链接
 知乎专栏 https://www.zhihu.com/column/c_1572953471791316992
 # 更新记录
+2022.12.26 更新：\
+ID3决策树分类.py（ID3 decision tree）\
+\
 2022.12.20 更新：\
 朴素贝叶斯.py（Naive Bayes）\
 \
