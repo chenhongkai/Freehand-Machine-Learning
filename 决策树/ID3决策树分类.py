@@ -215,6 +215,10 @@ class ID3decisionTree:
                     if x_[m]==value:
                         node = node['child nodes'][value]  # 进入第m特征取值为value的子结点
                         break
+                else:
+                    # 若当前结点无x_[m]这个取值的子结点，返回当前节点的类别标签
+                    y = node['class label']
+                    return y
 
             y = self.classify(node, x_)  # 进入子结点
         return y
@@ -329,7 +333,8 @@ if __name__=='__main__':
 
     Xtest__ = np.array([['东', '潮湿', '弱', 20],
                         ['南', '干燥', '强', 34],
-                        ['北', '干燥', '强', 26]])  # 测试样本集
+                        ['北', '干燥', '强', 26],
+                        ['南', '干燥', '弱', 20]])  # 测试样本集
     ytest_ = model.predict(Xtest__)                # 测试样本集的预测结果
     for x_, y in zip(Xtest__, ytest_):
         print(f'预测新样本 {x_} 的类别为 "{y}"')  # 显示预测结果
