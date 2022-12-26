@@ -216,7 +216,7 @@ class ID3decisionTree:
                         node = node['child nodes'][value]  # 进入第m特征取值为value的子结点
                         break
                 else:
-                    # 若当前结点无x_[m]这个取值的子结点，返回当前节点的类别标签
+                    # 若当前结点无x_[m]这个取值的子结点，返回当前结点的类别标签
                     y = node['class label']
                     return y
 
