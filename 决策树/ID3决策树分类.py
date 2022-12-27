@@ -64,12 +64,12 @@ class ID3decisionTree:
             'number of samples' : 结点的样本数量,
             'entropy' : 结点的熵值,
             'purity': 结点的纯度,
+            'index of splitting feature' : 划分特征的序号,
+            'partition point' : 划分点,
             'child nodes' : {'划分特征的取值1' : 子结点,
                              '划分特征的取值2' : 子结点,
                              ...
                             }
-            'index of splitting feature' : 划分特征的序号,
-            'partition point' : 划分点,
             }
         
         
