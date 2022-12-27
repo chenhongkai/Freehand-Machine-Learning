@@ -205,22 +205,22 @@ class ID3decisionTree:
                 # 若第m特征是连续值特征
                 t = node['partition point']  # 读取划分点
                 if x_[m].astype(float)>t:
-                    node = node['child nodes']['+']  # 进入第m特征取值大于划分点t的子结点
+                    childNode = node['child nodes']['+']  # 进入第m特征取值大于划分点t的子结点
                 else:
-                    node = node['child nodes']['-']  # 进入第m特征取值不大于划分点t的子结点
+                    childNode = node['child nodes']['-']  # 进入第m特征取值不大于划分点t的子结点
             else:
                 # 若第m特征是离散值特征
                 for value in node['child nodes'].keys():
                     # 遍历当前结点第m特征的取值
                     if x_[m]==value:
-                        node = node['child nodes'][value]  # 进入第m特征取值为value的子结点
+                        childNode = node['child nodes'][value]  # 进入第m特征取值为value的子结点
                         break
                 else:
-                    # 若当前结点无x_[m]这个取值的子结点，返回当前结点的类别标签
+                    # 若当前结点node无x_[m]这个取值的子结点，返回当前结点的类别标签
                     y = node['class label']
                     return y
 
-            y = self.classify(node, x_)  # 进入子结点
+            y = self.classify(childNode, x_)  # 进入子结点
         return y
 
     def pruning(self):
