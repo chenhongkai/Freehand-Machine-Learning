@@ -199,7 +199,6 @@ class C45decisionTree:
             # 此时，每一个选取的特征都是“信息增益等于平均水平”的特征，随后可从中选出信息增益率最大者进行划分
             indexHighGainFeatures_ = indexFeaturesChosen_  # 数组索引：信息增益高于（或等于）平均水平的特征序号
 
-
         maxGainRatio = 0.  # 初始化最大信息增益率
         for m in indexHighGainFeatures_:
             # 遍历所有“信息增益高于（或等于）平均水平”的特征，找出信息增益率最大的特征序号
