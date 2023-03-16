@@ -134,7 +134,7 @@ class C45decisionTree:
 
     def chooseBestFeature(self, X__: ndarray, y_: ndarray,
                           indexFeatureCandidates_: ndarray):
-        """选择最优的划分特征：输入样本集X_、标签y_，输出最优特征 mBest"""
+        """选择最优的划分特征：输入样本集X_、标签y_，输出最优特征序号 mBest"""
         N = len(X__)               # 样本数量
         baseEntropy = entropy(y_)  # 样本集的信息熵
         for m in indexFeatureCandidates_.copy():
@@ -190,11 +190,19 @@ class C45decisionTree:
         indexHighGainFeatures_ = []   # 初始化数组索引：信息增益高于平均水平的特征序号
         for m in informationGains_:
             # 遍历所有选取的特征，找出信息增益高于平均水平的特征序号
-            if informationGains_[m]>=averageInformationGain:
+            if informationGains_[m]>averageInformationGain:
                 indexHighGainFeatures_.append(m)  # 数组索引：信息增益高于平均水平的特征序号
+
+        if len(indexHighGainFeatures_)==0:
+            # 若找不到任何一个“信息增益高于平均水平”的特征，是因为每个特征的信息增益都相等，
+            # 浮点运算误差也有可能导致计算得到平均信息增益averageInformationGain略大于每个选取特征的信息增益。
+            # 此时，每一个选取的特征都是“信息增益等于平均水平”的特征，随后可从中选出信息增益率最大者进行划分
+            indexHighGainFeatures_ = indexFeaturesChosen_  # 数组索引：信息增益高于（或等于）平均水平的特征序号
+
+
         maxGainRatio = 0.  # 初始化最大信息增益率
         for m in indexHighGainFeatures_:
-            # 遍历所有“信息增益高于平均水平”的特征，找出信息增益率最大的特征序号
+            # 遍历所有“信息增益高于（或等于）平均水平”的特征，找出信息增益率最大的特征序号
             if gainRatio_[m]>maxGainRatio:
                 maxGainRatio = gainRatio_[m]  # 记录：最大信息增益率
                 mBest = m                     # 记录：最优的划分特征
