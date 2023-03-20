@@ -195,7 +195,7 @@ class C45decisionTree:
 
         if len(indexHighGainFeatures_)==0:
             # 若找不到任何一个“信息增益高于平均水平”的特征，是因为每个特征的信息增益都相等，
-            # 浮点运算误差也有可能导致计算得到平均信息增益averageInformationGain略大于每个选取特征的信息增益。
+            # 浮点运算误差也有可能导致计算得到的平均信息增益averageInformationGain略大于每个选取特征的信息增益。
             # 此时，每一个选取的特征都是“信息增益等于平均水平”的特征，随后可从中选出信息增益率最大者进行划分
             indexHighGainFeatures_ = indexFeaturesChosen_  # 数组索引：信息增益高于（或等于）平均水平的特征序号
 
