@@ -286,7 +286,7 @@ class SupportVectorMachineClassification:
         ax.plot(range(1, len(values_)), values_[:-1] - values_[1:], 'b-')  # 目标函数值相比上一次迭代的减小量
         ax.set_xlabel('Iteration')
         if self.solver=='pegasos':
-            ax.legend(['Loss', 'Loss decrement'])
+            ax.legend(['Loss function value', 'Decrement of loss function value'])
             ax.set_ylabel('Loss function')
         elif self.solver=='smo':
             ax.legend(['Objective function value', 'Decrement of objective function value'])
