@@ -35,7 +35,7 @@ class OneClassSupportVectorMachine:
         self.α_ = None   # N维向量：所有N个训练样本的拉格朗日乘子
         self.supportVectors__ = None  # 矩阵：所有支持向量
         self.αSV_ = None              # 向量：所有支持向量对应的拉格朗日乘子α
-        self.losses_ = None           # 列表：每次迭代的损失函数值（对于SMO求解算法，指对偶问题的最小化目标函数值）
+        self.minimizedObjectiveValues_ = None  # 列表：历次迭代的最小化目标函数值，对于SMO求解算法，指对偶问题的最小化目标函数值
         """选择核函数"""
         if self.kernel=='linear':
             self.kernelFunction = LinearKernel()
@@ -59,12 +59,12 @@ class OneClassSupportVectorMachine:
         K__ = self.kernelFunction(X__, X__)  # N×N矩阵：核函数矩阵
         α_ = ones(N)/N               # N维向量：初始化所有拉格朗日乘子α
         ρ = 0.                       # 初始化偏离距离
-        self.losses_ = losses_ = []  # 列表：记录历次迭代的损失函数值
-        loss = 0.5*(α_ @ K__ @ α_)   # 初始化优化目标函数值
+        self.minimizedObjectiveValues_ = []  # 列表：记录历次迭代的目标函数值
+        minimizedObjectiveValue = 0.5*(α_ @ K__ @ α_)    # 初始化：目标函数值
         for t in range(1, self.maxIterations + 1):
             indexSV_ = where(α_>0)[0]                   # 数组索引：索引满足α>0的支持向量
             indexNonBound_ = where((0<α_) & (α_<C))[0]  # 数组索引：索引满足0<α<C的支持向量
-            losses_.append(loss)                        # 记录当前目标函数值
+            self.minimizedObjectiveValues_.append(minimizedObjectiveValue)  # 记录当前目标函数值
             """检验所有样本点是否满足KKT条件，并计算各自违反KKT条件的程度"""
             wφx_ = α_[indexSV_] @ K__[indexSV_, :]         # N维向量：高维空间中，权重向量w与样本向量φ(x)的内积
             violateKKT_ = abs(wφx_ - ρ)                    # N维向量：开始计算“违反KKT条件的程度”
@@ -119,13 +119,12 @@ class OneClassSupportVectorMachine:
             """更新优化目标函数值"""
             vi = wφx_[i] - αiOld*Kii - αjOld*Kij  # 系数vi
             vj = wφx_[j] - αiOld*Kij - αjOld*Kjj  # 系数vj
-            loss += 0.5*(
-                  (αi**2 - αiOld**2)*Kii
-                + (αj**2 - αjOld**2)*Kjj
-                + 2*(αi*αj - αiOld*αjOld)*Kij
-                + 2*vi*(αi - αiOld)
-                + 2*vj*(αj - αjOld)
-                  )    # 更新目标函数值
+            minimizedObjectiveValue += 0.5*((αi**2 - αiOld**2)*Kii
+                                    + (αj**2 - αjOld**2)*Kjj
+                                    + 2*(αi*αj - αiOld*αjOld)*Kij
+                                    + 2*vi*(αi - αiOld)
+                                    + 2*vj*(αj - αjOld)
+                                      )    # 更新目标函数值
             """更新偏离距离ρ"""
             if 0<α_[i]<C:
                 ρ = wφx_[i] + (αi - αiOld)*Kii + (αj - αjOld)*Kij
@@ -211,17 +210,17 @@ class OneClassSupportVectorMachine:
         ax.set_xlabel('$x_{0}$')
         ax.set_ylabel('$x_{1}$')
 
-    def plotLoss(self):
+    def plotMinimizedObjectiveFunctionValues(self):
         """作图：训练迭代的最小化目标函数值"""
         import numpy as np
-        losses_ = np.array(self.losses_)
+        values_ = np.array(self.minimizedObjectiveValues_)
         fig = plt.figure(figsize=[6, 6])
         ax = fig.add_subplot(111)
-        ax.plot(range(1, len(losses_) + 1), losses_, 'r-')                 # 历次迭代的最小化目标函数值
-        ax.plot(range(1, len(losses_)), losses_[:-1] - losses_[1:], 'b-')  # 目标函数值相比上一次迭代的减小量
+        ax.plot(range(1, len(values_) + 1), values_, 'r-')                 # 历次迭代的最小化目标函数值
+        ax.plot(range(1, len(values_)), values_[:-1] - values_[1:], 'b-')  # 目标函数值相比上一次迭代的减小量
         ax.set_xlabel('Iteration')
         ax.set_ylabel('Minimized objective function')
-        ax.legend(['Function value', 'Decrement of function value'])
+        ax.legend(['Objective function value', 'Decrement of objective function value'])
 
 
 if __name__=='__main__':
@@ -252,7 +251,7 @@ if __name__=='__main__':
         r=1.,      # 超参数：多项式核函数的参数
         )
     model.fit(Xtrain__)     # 训练
-    model.plotLoss()        # 作图：训练迭代的损失函数值（SMO算法为最小化的目标函数值）
+    model.plotMinimizedObjectiveFunctionValues()  # 作图：历次迭代的最小化目标函数值
     model.plot2D(Xtrain__)  # 作图：对于特征为2维的样本，查看决策超平面、支持向量
     if model.kernel=='linear':
         print(f'权重向量w_ = {model.w_}')
