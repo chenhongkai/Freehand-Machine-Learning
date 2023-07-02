@@ -35,7 +35,7 @@ class SupportVectorDataDescription:
         self.α_ = None   # N维向量：所有N个训练样本的拉格朗日乘子
         self.supportVectors__ = None  # 矩阵：所有支持向量
         self.αSV_ = None     # 向量：所有支持向量对应的拉格朗日乘子α
-        self.losses_ = None  # 列表：每次迭代的损失函数值（对于SMO求解算法，指对偶问题的最小化目标函数值）
+        self.minimizedObjectiveValues_ = None  # 列表：历次迭代的最小化目标函数值，对于SMO求解算法，指对偶问题的最小化目标函数值
         """选择核函数"""
         if self.kernel=='linear':
             self.kernelFunction = LinearKernel()
@@ -59,13 +59,13 @@ class SupportVectorDataDescription:
         diagK_ = K__.diagonal()              # N维向量：核函数矩阵K__的对角线元素
         α_ = ones(N)/N               # N维向量：初始化N个拉格朗日乘子α
         R = 1.                       # 初始化超球体半径
-        self.losses_ = losses_ = []  # 列表：记录历次迭代的损失函数值
+        self.minimizedObjectiveValues_ = []  # 列表：记录历次迭代的目标函数值
         aTa = α_ @ K__ @ α_          # 初始化超球体球心向量的内积
-        loss = aTa - α_ @ diagK_     # 初始化最小化的目标函数值
+        minimizedObjectiveValue = aTa - α_ @ diagK_     # 初始化最小化的目标函数值
         for t in range(1, self.maxIterations + 1):
             indexSV_ = where(α_>0)[0]                   # 数组索引：满足α>0的支持向量
             indexNonBound_ = where((0<α_) & (α_<C))[0]  # 数组索引：满足0<α<C的支持向量
-            losses_.append(loss)                        # 记录当前目标函数值
+            self.minimizedObjectiveValues_.append(minimizedObjectiveValue)  # 记录当前目标函数值
             """检验所有N个训练样本是否满足KKT条件，并计算各自违背KKT条件的程度"""
             g_ = α_[indexSV_] @ K__[indexSV_, :]         # N维向量：g(xi)值，i=1~N
             D_ = abs(aTa + diagK_ - 2*g_)**0.5           # N维向量：N个样本到超球体球心的距离
@@ -128,10 +128,10 @@ class SupportVectorDataDescription:
                    + 2*vi*(αi - αiOld)
                    + 2*vj*(αj - αjOld)
                     )    # 更新球心向量的内积
-            loss += ( (aTa - aTaOld)
-                    -diagK_[i]*(αi - αiOld)
-                    -diagK_[j]*(αj - αjOld)
-                    )    # 更新最小化目标函数值
+            minimizedObjectiveValue += ( (aTa - aTaOld)
+                                      -diagK_[i]*(αi - αiOld)
+                                      -diagK_[j]*(αj - αjOld)
+                                       )   # 更新最小化目标函数值
             """更新超球体半径R"""
             if 0<α_[i]<C:
                 R = abs(aTa + diagK_[i] - 2*(g_[i] + (αi - αiOld)*Kii + (αj - αjOld)*Kij))**0.5
@@ -226,17 +226,17 @@ class SupportVectorDataDescription:
                  )
         ax.set_aspect('equal')
 
-    def plotLoss(self):
-        """作图：历次训练迭代的最小化目标函数值"""
+    def plotMinimizedObjectiveFunctionValues(self):
+        """作图：训练迭代的最小化目标函数值"""
         import numpy as np
-        losses_ = np.array(self.losses_)
+        values_ = np.array(self.minimizedObjectiveValues_)
         fig = plt.figure(figsize=[6, 6])
         ax = fig.add_subplot(111)
-        ax.plot(range(1, len(losses_) + 1), losses_, 'r-')                 # 历次迭代的损失函数值
-        ax.plot(range(1, len(losses_)), losses_[:-1] - losses_[1:], 'b-')  # 损失函数值相比上一次迭代的减小量
+        ax.plot(range(1, len(values_) + 1), values_, 'r-')                 # 历次迭代的最小化目标函数值
+        ax.plot(range(1, len(values_)), values_[:-1] - values_[1:], 'b-')  # 目标函数值相比上一次迭代的减小量
         ax.set_xlabel('Iteration')
         ax.set_ylabel('Minimized objective function')
-        ax.legend(['Function value', 'Decrement of function value'])
+        ax.legend(['Objective function value', 'Decrement of objective function value'])
 
 
 if __name__=='__main__':
@@ -267,7 +267,7 @@ if __name__=='__main__':
         r=1.,      # 超参数：多项式核函数的参数
         )
     model.fit(Xtrain__)     # 训练
-    model.plotLoss()        # 作图：训练迭代的最小化目标函数值
+    model.plotMinimizedObjectiveFunctionValues()   # 作图：历次迭代的最小化目标函数值
     model.plot2D(Xtrain__)  # 作图：对于特征为2维的样本，查看正常/异常边界、支持向量
     if model.kernel=='linear':
         print(f'超球体球心向量a_ = {model.a_}')
