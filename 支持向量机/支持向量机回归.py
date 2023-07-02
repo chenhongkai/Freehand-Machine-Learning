@@ -22,7 +22,7 @@ class SupportVectorMachineRegression:
             r: float = 1.,      # 超参数：多项式核函数的参数
             ):
         assert C>0, '惩罚参数C应大于0'
-        assert ε>0, '间隔带半宽度ε应大于0'
+        assert ε>0, 'ε间隔带半宽度ε应大于0'
         assert type(maxIterations)==int and maxIterations>0, '最大迭代次数maxIterations应为正整数'
         assert tol>0, '收敛精度tol应大于0'
         assert LR>0, '全局学习率LR大于0'
@@ -47,7 +47,7 @@ class SupportVectorMachineRegression:
         self.supportVectors__ = None  # 矩阵：所有支持向量
         self.αSV_ = None     # 向量：所有支持向量对应的拉格朗日乘子α
         self.ySV_ = None     # 向量：所有支持向量对应的标签
-        self.losses_ = None  # 列表：历次迭代的损失函数值（对于SMO求解算法，指对偶问题的最小化目标函数值）
+        self.minimizedObjectiveValues_ = None  # 列表：历次迭代的最小化目标函数值（对于Pegasos算法，指损失函数值；对于SMO求解算法，指对偶问题的最小化目标函数值）
         """选择核函数"""
         if self.kernel=='linear':
             self.kernelFunction = LinearKernel()
@@ -91,7 +91,7 @@ class SupportVectorMachineRegression:
         optimizer_for_w_ = GradientDescent(w_, method='Adam', LR=self.LR)  # 实例化w_的梯度下降优化器，代入全局学习率LR，选择Adam学习率调整策略
         optimizer_for_b  = GradientDescent(b,  method='Adam', LR=self.LR)  # 实例化b的梯度下降优化器，代入全局学习率LR，选择Adam学习率调整策略
         minLoss = inf  # 初始化最小损失函数值
-        self.losses_ = losses_ = []  # 列表：记录每一次迭代的损失函数值
+        self.minimizedObjectiveValues_ = losses_ = []  # 列表：记录每一次迭代的损失函数值
         ξ_ = zeros(N)  # N维向量：初始化N个松弛变量
         for t in range(1, self.maxIterations+1):
             Δ_ = X__ @ w_ + b - y_   # N维向量：N个残差；残差 = 预测值 - 真实值
@@ -130,12 +130,12 @@ class SupportVectorMachineRegression:
                      [K__, K__]])  # 2N×2N矩阵：扩展的核函数矩阵
         λ_ = zeros(2*N)  # 2N维向量：初始化2N个拉格朗日乘子，即αhat_和α_
         b = 0            # 初始化偏置
-        self.losses_ = losses_ = []  # 列表：记录历次迭代的目标函数值
-        loss = 0.5*λ_ @ (z_*K__*z_.reshape(-1, 1)) @ λ_ - λ_ @ c_  # 初始化优化的目标函数值
+        self.minimizedObjectiveValues_ = []  # 列表：记录历次迭代的目标函数值
+        minimizedObjectiveValue = 0.5*λ_ @ (z_*K__*z_.reshape(-1, 1)) @ λ_ - λ_ @ c_   # 初始化：目标函数值
         for t in range(1, self.maxIterations + 1):
             indexSV_ = where(λ_>0)[0]                   # 数组索引：满足λ>0的支持向量
             indexNonBound_ = where((0<λ_) & (λ_<C))[0]  # 数组索引：满足0<λ<C的支持向量
-            losses_.append(loss)                        # 记录当前目标函数值
+            self.minimizedObjectiveValues_.append(minimizedObjectiveValue)  # 记录当前目标函数值
             """检验所有2N个λ是否满足KKT条件，并计算各λ违反KKT条件的程度"""
             g_ = (λ_[indexSV_]*z_[indexSV_]) @ K__[indexSV_, :] + b  # 2N维向量：g(xi)值，i=1~N
             zg_ = z_*g_                                   # 2N维向量：zi*g(xi), i = 1~N
@@ -198,12 +198,12 @@ class SupportVectorMachineRegression:
             """更新目标函数值"""
             vi = g_[i] - λiOld*z_[i]*Kii - λjOld*z_[j]*Kij - b  # 记号vi
             vj = g_[j] - λiOld*z_[i]*Kij - λjOld*z_[j]*Kjj - b  # 记号vj
-            loss += (0.5*(λi**2 - λiOld**2)*Kii
-                 + 0.5*(λj**2 - λjOld**2)*Kjj
-                 + (λi*λj - λiOld*λjOld)*Kij*z_[i]*z_[j]
-                 + vi*z_[i]*(λi - λiOld)
-                 + vj*z_[j]*(λj - λjOld)
-                  ) - ((λi - λiOld)*c_[i] + (λj - λjOld)*c_[j])  # 更新目标函数值
+            minimizedObjectiveValue += (0.5*(λi**2 - λiOld**2)*Kii
+                                     + 0.5*(λj**2 - λjOld**2)*Kjj
+                                     + (λi*λj - λiOld*λjOld)*Kij*z_[i]*z_[j]
+                                     + vi*z_[i]*(λi - λiOld)
+                                     + vj*z_[j]*(λj - λjOld)
+                                      ) - ((λi - λiOld)*c_[i] + (λj - λjOld)*c_[j])  # 更新目标函数值
             """更新偏置b"""
             if 0<λi<C:
                 b =  -Ei - z_[i]*Kii*(λ_[i] - λiOld) - z_[j]*Kij*(λ_[j] - λjOld) + b
@@ -282,20 +282,20 @@ class SupportVectorMachineRegression:
                   ['Regression value', 'True value', 'Margin'] + (['Support vectors'] if self.solver=='smo' else [])
                   )
 
-    def plotLoss(self):
-        """作图：训练迭代的损失函数值（SMO算法为最小化的目标函数值）"""
+    def plotMinimizedObjectiveFunctionValues(self):
+        """作图：训练迭代的最小化目标函数值"""
         import numpy as np
-        losses_ = np.array(self.losses_)
+        values_ = np.array(self.minimizedObjectiveValues_)
         fig = plt.figure(figsize=[6, 6])
         ax = fig.add_subplot(111)
-        ax.plot(range(1, len(losses_) + 1), losses_, 'r-')                 # 历次迭代的损失函数值
-        ax.plot(range(1, len(losses_)), losses_[:-1] - losses_[1:], 'b-')  # 损失函数值相比上一次迭代的减小量
+        ax.plot(range(1, len(values_) + 1), values_, 'r-')                 # 历次迭代的最小化目标函数值
+        ax.plot(range(1, len(values_)), values_[:-1] - values_[1:], 'b-')  # 目标函数值相比上一次迭代的减小量
         ax.set_xlabel('Iteration')
         if self.solver=='pegasos':
-            ax.legend(['Loss', 'Loss decrement'])
+            ax.legend(['Loss function value', 'Decrement of loss function value'])
             ax.set_ylabel('Loss function')
         elif self.solver=='smo':
-            ax.legend(['Function value', 'Decrement of function value'])
+            ax.legend(['Objective function value', 'Decrement of objective function value'])
             ax.set_ylabel('Minimized objective function')
 
 
@@ -327,9 +327,9 @@ if __name__=='__main__':
         γ=1.,      # 超参数：高斯核函数、多项式核函数的参数
         r=1.,      # 超参数：多项式核函数的参数
         )
-    model.fit(Xtrain__, ytrain_)
-    model.plot1D(Xtrain__, ytrain_)  # 作图：查看间隔带、支持向量
-    model.plotLoss()                 # 作图：历次迭代的损失函数值（SMO算法为最小化的目标函数值）
+    model.fit(Xtrain__, ytrain_)  # 训练
+    model.plot1D(Xtrain__, ytrain_)               # 作图：查看间隔带、支持向量
+    model.plotMinimizedObjectiveFunctionValues()  # 作图：历次迭代的最小化目标函数值
     if model.kernel=='linear':
         print(f'权重向量w_ = {model.w_}')
     print(f'偏置b = {model.b}')
