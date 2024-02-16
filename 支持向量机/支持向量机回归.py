@@ -137,8 +137,8 @@ class SupportVectorMachineRegression:
             indexNonBound_ = where((0<λ_) & (λ_<C))[0]  # 数组索引：满足0<λ<C的支持向量
             self.minimizedObjectiveValues_.append(minimizedObjectiveValue)  # 记录当前目标函数值
             """检验所有2N个λ是否满足KKT条件，并计算各λ违反KKT条件的程度"""
-            g_ = (λ_[indexSV_]*z_[indexSV_]) @ K__[indexSV_, :] + b  # 2N维向量：g(xi)值，i=1~N
-            zg_ = z_*g_                                   # 2N维向量：zi*g(xi), i = 1~N
+            g_ = (λ_[indexSV_]*z_[indexSV_]) @ K__[indexSV_, :] + b  # 2N维向量：g(xi)值，i = 0~2N-1
+            zg_ = z_*g_                                   # 2N维向量：zi*g(xi), i = 0~2N-1
             violateKKT_ = abs(c_ - zg_)                   # 2N维向量：开始计算“违反KKT条件的程度”
             violateKKT_[(λ_==0) & (zg_>=c_)] = 0.         # 2N维向量：KKT条件 λ=0 ←→ z*g(x)≥c
             violateKKT_[(0<λ_) & (λ_<C) & (zg_==c_)] = 0. # 2N维向量：KKT条件 0<λ<C ←→ z*g(x)=c
